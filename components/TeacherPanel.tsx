@@ -57,6 +57,7 @@ const TeacherPanel: React.FC<TeacherPanelProps> = ({ progress, onImport }) => {
     document.body.appendChild(downloadAnchorNode);
     downloadAnchorNode.click();
     downloadAnchorNode.remove();
+    alert("Liste hazır! Bu dosyayı öğrencilerinize gönderin, onlar da 'Öğretmen Listesini Yükle' butonunu kullanarak yüklesinler.");
   };
 
   return (
@@ -71,7 +72,7 @@ const TeacherPanel: React.FC<TeacherPanelProps> = ({ progress, onImport }) => {
             onClick={exportData}
             className="bg-blue-600 hover:bg-blue-700 px-4 py-2 rounded-xl text-sm font-bold transition-colors"
           >
-            <i className="fa-solid fa-download mr-2"></i> İlerlemeyi Dışa Aktar
+            <i className="fa-solid fa-share-nodes mr-2"></i> Listeyi Dışa Aktar & Paylaş
           </button>
         </div>
 
