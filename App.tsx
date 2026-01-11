@@ -21,36 +21,35 @@ const App: React.FC = () => {
   const [showGuide, setShowGuide] = useState(false);
 
   useEffect(() => {
-    // 1. Mevcut kaydı yükle
+    // 1. Mevcut ilerlemeyi yükle
     const saved = loadProgress();
     
-    // 2. Koddaki 'Embedded' kelimeleri parse et
+    // 2. Gömülü müfredat kelimelerini oluştur
     let embeddedWords: Word[] = [];
     THEMES.forEach(theme => {
       const csv = DEFAULT_CSV_DATA[theme.id];
       if (csv) {
+        // Gömülü verilerde mapping sabit: english, turkish, unit
         const parsed = parseCSV(csv, theme.id as ThemeId, { english: 'english', turkish: 'turkish', unit: 'unit' });
         embeddedWords = [...embeddedWords, ...parsed];
       }
     });
 
-    // 3. Birleştirme: Kitap verisini birincil kaynak yap
-    const existingKeys = new Set(saved.words.map(w => `${w.english.toLowerCase()}-${w.unit.toLowerCase()}`));
-    
-    const newWords = embeddedWords.filter(ew => 
-      !existingKeys.has(`${ew.english.toLowerCase()}-${ew.unit.toLowerCase()}`)
-    );
-
-    if (newWords.length > 0) {
-      const updated = { ...saved, words: [...saved.words, ...newWords] };
-      saveProgress(updated);
-      setProgress(updated);
+    // 3. Senkronizasyon: Eğer cihazda hiç kelime yoksa veya müfredat güncellendiyse (kelime sayısı farkı)
+    // Öğrencinin ilerlemesini bozmadan yeni kelimeleri ekle
+    if (saved.words.length === 0) {
+      const initial = { ...saved, words: embeddedWords };
+      saveProgress(initial);
+      setProgress(initial);
     } else {
-      // Eğer kelime sayısı değiştiyse (müfredat güncellendiyse) progress'i güncelle
-      if (saved.words.length !== embeddedWords.length && saved.words.length === 0) {
-        const initial = { ...saved, words: embeddedWords };
-        saveProgress(initial);
-        setProgress(initial);
+      // Mevcut kelimeleri koru, eğer gömülü tarafta olup saved tarafta olmayan varsa ekle (Müfredat güncelleme desteği)
+      const savedKeys = new Set(saved.words.map(w => `${w.english.toLowerCase()}-${w.themeId}`));
+      const missingWords = embeddedWords.filter(ew => !savedKeys.has(`${ew.english.toLowerCase()}-${ew.themeId}`));
+      
+      if (missingWords.length > 0) {
+        const updated = { ...saved, words: [...saved.words, ...missingWords] };
+        saveProgress(updated);
+        setProgress(updated);
       } else {
         setProgress(saved);
       }
@@ -78,31 +77,6 @@ const App: React.FC = () => {
     if (view === 'UNITS' || view === 'TEACHER') setView('MENU');
     else if (['STUDY', 'QUIZ_EN_TR', 'QUIZ_TR_EN', 'QUICK_REVIEW'].includes(view)) setView('UNITS');
     else setView('MENU');
-  };
-
-  const handleStudentImport = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onload = (ev) => {
-        try {
-          const importedData = JSON.parse(ev.target?.result as string);
-          if (importedData && Array.isArray(importedData.words)) {
-            const existingKeys = new Set(progress.words.map(w => `${w.english.toLowerCase()}-${w.unit.toLowerCase()}`));
-            const freshWords = importedData.words.filter((w: Word) => 
-               !existingKeys.has(`${w.english.toLowerCase()}-${w.unit.toLowerCase()}`)
-            );
-            const updated = { ...progress, words: [...progress.words, ...freshWords] };
-            saveProgress(updated);
-            setProgress(updated);
-            alert(`${freshWords.length} yeni kelime eklendi.`);
-          }
-        } catch (err) {
-          alert("Dosya okunamadı.");
-        }
-      };
-      reader.readAsText(file);
-    }
   };
 
   const renderContent = () => {
@@ -136,7 +110,7 @@ const App: React.FC = () => {
               
               <div className="bg-gradient-to-r from-blue-600 to-indigo-500 text-white p-8 rounded-3xl shadow-xl text-center max-w-2xl w-full border-b-8 border-blue-700">
                 <h2 className="heading-font text-4xl mb-2 italic tracking-tight">Word Master 5 🚀</h2>
-                <p className="opacity-90 font-medium text-lg">6 Tema, Yüzlerce Kelime! Kitabındaki tüm kelimeler burada.</p>
+                <p className="opacity-90 font-medium text-lg">6 Tema, Tüm Kitap Kelimeleri Gömülü!</p>
               </div>
             </div>
 
@@ -259,7 +233,7 @@ const App: React.FC = () => {
         <div className="flex flex-col items-end">
           <div className="text-[10px] text-gray-400 font-bold uppercase tracking-widest mb-1">Kelime Sayısı</div>
           <div className="bg-blue-50 text-blue-600 px-4 py-1.5 rounded-xl border border-blue-100 font-bold text-sm shadow-sm">
-            {progress.words.length} Kelime
+            {progress.words.length} Kelime Aktif
           </div>
         </div>
       </footer>
