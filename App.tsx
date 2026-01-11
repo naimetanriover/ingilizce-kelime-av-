@@ -1,39 +1,59 @@
 
 import React, { useState, useEffect, useMemo } from 'react';
-import { ViewState, ThemeId, Word, UserProgress, Theme } from './types';
-import { THEMES, DEFAULT_CSV_DATA } from './constants';
-import { loadProgress, saveProgress, updateWordProgress } from './services/dataManager';
-import { parseCSV } from './services/csvParser';
+import { ViewState, ThemeId, Word, UserProgress } from './types.ts';
+import { THEMES, DEFAULT_CSV_DATA } from './constants.tsx';
+import { loadProgress, saveProgress, updateWordProgress } from './services/dataManager.ts';
+import { parseCSV } from './services/csvParser.ts';
 
 // Components
-import ThemeCard from './components/ThemeCard';
-import UnitList from './components/UnitList';
-import FlashcardMode from './components/FlashcardMode';
-import QuizMode from './components/QuizMode';
-import Navbar from './components/Navbar';
+import ThemeCard from './components/ThemeCard.tsx';
+import UnitList from './components/UnitList.tsx';
+import FlashcardMode from './components/FlashcardMode.tsx';
+import QuizMode from './components/QuizMode.tsx';
+import Navbar from './components/Navbar.tsx';
+import TeacherPanel from './components/TeacherPanel.tsx';
 
 const App: React.FC = () => {
-  const [view, setView] = useState<ViewState>('MENU');
+  const [view, setView] = useState<ViewState | 'TEACHER'>('MENU');
   const [activeThemeId, setActiveThemeId] = useState<ThemeId | null>(null);
   const [activeUnit, setActiveUnit] = useState<string | null>(null);
   const [progress, setProgress] = useState<UserProgress>({ words: [], badges: [] });
   const [showGuide, setShowGuide] = useState(false);
 
-  // Initialize data if empty
   useEffect(() => {
+    // 1. Mevcut kaydı yükle
     const saved = loadProgress();
-    if (saved.words.length === 0) {
-      let initialWords: Word[] = [];
-      THEMES.forEach(theme => {
-        const csv = DEFAULT_CSV_DATA[theme.id];
-        const parsed = parseCSV(csv, theme.id, { english: 'word', turkish: 'meaning', unit: '' });
-        initialWords = [...initialWords, ...parsed];
-      });
-      const initProgress = { words: initialWords, badges: [] };
-      saveProgress(initProgress);
-      setProgress(initProgress);
+    
+    // 2. Koddaki 'Embedded' kelimeleri parse et
+    let embeddedWords: Word[] = [];
+    THEMES.forEach(theme => {
+      const csv = DEFAULT_CSV_DATA[theme.id];
+      if (csv) {
+        const parsed = parseCSV(csv, theme.id as ThemeId, { english: 'english', turkish: 'turkish', unit: 'unit' });
+        embeddedWords = [...embeddedWords, ...parsed];
+      }
+    });
+
+    // 3. Birleştirme: Kitap verisini birincil kaynak yap
+    const existingKeys = new Set(saved.words.map(w => `${w.english.toLowerCase()}-${w.unit.toLowerCase()}`));
+    
+    const newWords = embeddedWords.filter(ew => 
+      !existingKeys.has(`${ew.english.toLowerCase()}-${ew.unit.toLowerCase()}`)
+    );
+
+    if (newWords.length > 0) {
+      const updated = { ...saved, words: [...saved.words, ...newWords] };
+      saveProgress(updated);
+      setProgress(updated);
     } else {
-      setProgress(saved);
+      // Eğer kelime sayısı değiştiyse (müfredat güncellendiyse) progress'i güncelle
+      if (saved.words.length !== embeddedWords.length && saved.words.length === 0) {
+        const initial = { ...saved, words: embeddedWords };
+        saveProgress(initial);
+        setProgress(initial);
+      } else {
+        setProgress(saved);
+      }
     }
   }, []);
 
@@ -55,7 +75,7 @@ const App: React.FC = () => {
   };
 
   const handleBack = () => {
-    if (view === 'UNITS') setView('MENU');
+    if (view === 'UNITS' || view === 'TEACHER') setView('MENU');
     else if (['STUDY', 'QUIZ_EN_TR', 'QUIZ_TR_EN', 'QUICK_REVIEW'].includes(view)) setView('UNITS');
     else setView('MENU');
   };
@@ -68,20 +88,17 @@ const App: React.FC = () => {
         try {
           const importedData = JSON.parse(ev.target?.result as string);
           if (importedData && Array.isArray(importedData.words)) {
-            // Merge logic: keep existing progress if same word ID, add new ones
-            const existingIds = new Set(progress.words.map(w => w.id));
-            const newWords = importedData.words.filter((w: Word) => !existingIds.has(w.id));
-            
-            const updated = {
-              ...progress,
-              words: [...progress.words, ...newWords]
-            };
+            const existingKeys = new Set(progress.words.map(w => `${w.english.toLowerCase()}-${w.unit.toLowerCase()}`));
+            const freshWords = importedData.words.filter((w: Word) => 
+               !existingKeys.has(`${w.english.toLowerCase()}-${w.unit.toLowerCase()}`)
+            );
+            const updated = { ...progress, words: [...progress.words, ...freshWords] };
             saveProgress(updated);
             setProgress(updated);
-            alert(`Harika! Öğretmeninin gönderdiği ${newWords.length} yeni kelime eklendi.`);
+            alert(`${freshWords.length} yeni kelime eklendi.`);
           }
         } catch (err) {
-          alert("Dosya yüklenirken bir hata oluştu. Lütfen doğru dosyayı seçtiğinden emin ol.");
+          alert("Dosya okunamadı.");
         }
       };
       reader.readAsText(file);
@@ -89,45 +106,66 @@ const App: React.FC = () => {
   };
 
   const renderContent = () => {
+    if (view === 'TEACHER') {
+      return (
+        <TeacherPanel 
+          progress={progress} 
+          onImport={(newWords) => {
+            const updated = { ...progress, words: [...progress.words, ...newWords] };
+            saveProgress(updated);
+            setProgress(updated);
+          }} 
+        />
+      );
+    }
+
     switch (view) {
       case 'MENU':
         return (
           <div className="max-w-6xl mx-auto px-4">
-            {/* Student Actions Bar */}
-            <div className="flex flex-wrap gap-4 mb-8 justify-center">
-              <button 
-                onClick={() => setShowGuide(true)}
-                className="bg-yellow-400 hover:bg-yellow-500 text-yellow-900 px-6 py-3 rounded-2xl font-bold shadow-lg transform transition hover:scale-105 flex items-center space-x-2"
-              >
-                <i className="fa-solid fa-lightbulb"></i>
-                <span>Nasıl Oynanır?</span>
-              </button>
+            <div className="flex flex-col items-center mb-10">
+              <div className="flex flex-wrap gap-4 justify-center mb-6">
+                <button 
+                  onClick={() => setShowGuide(true)}
+                  className="bg-white text-blue-600 border-2 border-blue-100 px-6 py-3 rounded-2xl font-bold shadow-sm hover:shadow-md transition-all flex items-center space-x-2"
+                >
+                  <i className="fa-solid fa-circle-question"></i>
+                  <span>Nasıl Oynanır?</span>
+                </button>
+              </div>
               
-              <label className="bg-purple-500 hover:bg-purple-600 text-white px-6 py-3 rounded-2xl font-bold shadow-lg transform transition hover:scale-105 flex items-center space-x-2 cursor-pointer">
-                <i className="fa-solid fa-file-import"></i>
-                <span>Öğretmen Listesini Yükle</span>
-                <input type="file" accept=".json" onChange={handleStudentImport} className="hidden" />
-              </label>
+              <div className="bg-gradient-to-r from-blue-600 to-indigo-500 text-white p-8 rounded-3xl shadow-xl text-center max-w-2xl w-full border-b-8 border-blue-700">
+                <h2 className="heading-font text-4xl mb-2 italic tracking-tight">Word Master 5 🚀</h2>
+                <p className="opacity-90 font-medium text-lg">6 Tema, Yüzlerce Kelime! Kitabındaki tüm kelimeler burada.</p>
+              </div>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {THEMES.map(theme => {
                 const themeProgress = progress.words.filter(w => w.themeId === theme.id);
-                const learned = themeProgress.filter(w => w.level > 0).length;
-                const total = themeProgress.length;
                 return (
                   <ThemeCard 
                     key={theme.id} 
                     theme={theme} 
-                    learned={learned} 
-                    total={total}
+                    learned={themeProgress.filter(w => w.level > 3).length} 
+                    total={themeProgress.length}
                     onClick={() => {
-                      setActiveThemeId(theme.id);
+                      setActiveThemeId(theme.id as ThemeId);
                       setView('UNITS');
                     }}
                   />
                 );
               })}
+            </div>
+            
+            <div className="mt-12 text-center pb-10">
+              <button 
+                onClick={() => setView('TEACHER')}
+                className="text-gray-400 hover:text-gray-600 text-sm font-bold flex items-center justify-center space-x-2 mx-auto px-4 py-2 rounded-xl hover:bg-gray-100 transition-all"
+              >
+                <i className="fa-solid fa-user-tie"></i>
+                <span>Müfredat Yönetimi (Öğretmen)</span>
+              </button>
             </div>
           </div>
         );
@@ -159,7 +197,7 @@ const App: React.FC = () => {
       case 'QUICK_REVIEW':
         return activeUnit && (
           <QuizMode 
-            mode={view}
+            mode={view as ViewState}
             unitName={activeUnit}
             words={unitWords}
             allThemeWords={themeWords}
@@ -169,92 +207,60 @@ const App: React.FC = () => {
         );
 
       default:
-        return <div>Yapım aşamasında...</div>;
+        return <div className="text-center p-10 font-bold">Yükleniyor...</div>;
     }
   };
 
   return (
-    <div className="min-h-screen pb-20">
-      <Navbar 
-        onHome={() => setView('MENU')} 
-        canGoBack={view !== 'MENU'}
-        onBack={handleBack}
-      />
+    <div className="min-h-screen pb-24 bg-[#f8fafc]">
+      <Navbar onHome={() => setView('MENU')} canGoBack={view !== 'MENU'} onBack={handleBack} />
       <main className="container mx-auto mt-6">
         {renderContent()}
       </main>
 
-      {/* Guide Modal */}
       {showGuide && (
-        <div className="fixed inset-0 bg-black/60 z-[60] flex items-center justify-center p-4 backdrop-blur-sm">
-          <div className="bg-white rounded-3xl max-w-2xl w-full max-h-[90vh] overflow-y-auto p-8 relative shadow-2xl">
-            <button 
-              onClick={() => setShowGuide(false)}
-              className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 text-2xl"
-            >
-              <i className="fa-solid fa-circle-xmark"></i>
+        <div className="fixed inset-0 bg-black/70 z-[60] flex items-center justify-center p-4 backdrop-blur-md transition-all">
+          <div className="bg-white rounded-[2rem] max-w-md w-full p-8 relative shadow-2xl border-4 border-blue-100">
+            <button onClick={() => setShowGuide(false)} className="absolute -top-4 -right-4 bg-red-500 text-white w-10 h-10 rounded-full flex items-center justify-center shadow-lg hover:bg-red-600 transition-colors">
+              <i className="fa-solid fa-xmark"></i>
             </button>
-            <h2 className="heading-font text-3xl text-blue-600 mb-6 flex items-center">
-              <i className="fa-solid fa-gamepad mr-3"></i>
-              Oyun Rehberi
-            </h2>
-            
-            <div className="space-y-6 text-gray-700">
-              <section className="bg-blue-50 p-4 rounded-2xl border-l-4 border-blue-400">
-                <h3 className="font-bold text-lg mb-2 flex items-center">
-                  <span className="bg-blue-600 text-white w-6 h-6 rounded-full flex items-center justify-center text-sm mr-2">1</span>
-                  Kelime Çalış (Flashcards)
-                </h3>
-                <p>Kelimelerin İngilizcelerini dinle ve anlamlarını tahmin et. "Biliyorum" dersen kelime seviye atlar!</p>
-              </section>
-
-              <section className="bg-green-50 p-4 rounded-2xl border-l-4 border-green-400">
-                <h3 className="font-bold text-lg mb-2 flex items-center">
-                  <span className="bg-green-600 text-white w-6 h-6 rounded-full flex items-center justify-center text-sm mr-2">2</span>
-                  Kelime Avcısı (Quiz)
-                </h3>
-                <p>Zamana karşı veya puan toplamak için doğru şıkkı bul. Hızlı olursan daha çok puan kazanırsın.</p>
-              </section>
-
-              <section className="bg-orange-50 p-4 rounded-2xl border-l-4 border-orange-400">
-                <h3 className="font-bold text-lg mb-2 flex items-center">
-                  <span className="bg-orange-600 text-white w-6 h-6 rounded-full flex items-center justify-center text-sm mr-2">3</span>
-                  Seviye Sistemi
-                </h3>
-                <p>Bir kelimeyi ne kadar çok doğru bilirsen seviyesi 5'e kadar yükselir. Amacın tüm kelimeleri "Usta" yapmak!</p>
-              </section>
-
-              <section className="bg-purple-50 p-4 rounded-2xl border-l-4 border-purple-400">
-                <h3 className="font-bold text-lg mb-2 flex items-center">
-                  <span className="bg-purple-600 text-white w-6 h-6 rounded-full flex items-center justify-center text-sm mr-2">4</span>
-                  Öğretmen Listeleri
-                </h3>
-                <p>Öğretmeninin gönderdiği özel listeleri ana menüden yükleyebilirsin.</p>
-              </section>
+            <h2 className="heading-font text-3xl text-blue-600 mb-6 italic text-center underline decoration-wavy underline-offset-8">Nasıl Çalışır?</h2>
+            <div className="space-y-6">
+               <div className="flex items-start space-x-4">
+                 <div className="bg-blue-500 text-white w-8 h-8 rounded-full flex-shrink-0 flex items-center justify-center font-bold shadow-md">1</div>
+                 <p className="text-gray-700 leading-relaxed font-medium">Kitabındaki <b>6 Temadan</b> birini seç.</p>
+               </div>
+               <div className="flex items-start space-x-4">
+                 <div className="bg-green-500 text-white w-8 h-8 rounded-full flex-shrink-0 flex items-center justify-center font-bold shadow-md">2</div>
+                 <p className="text-gray-700 leading-relaxed font-medium"><b>"Çalış"</b> modunda kelimeleri sesli dinleyip ezberle.</p>
+               </div>
+               <div className="flex items-start space-x-4">
+                 <div className="bg-orange-500 text-white w-8 h-8 rounded-full flex-shrink-0 flex items-center justify-center font-bold shadow-md">3</div>
+                 <p className="text-gray-700 leading-relaxed font-medium"><b>"Test"</b> modlarında puanları topla ve kelimeleri "Usta" yap!</p>
+               </div>
             </div>
-
-            <button 
-              onClick={() => setShowGuide(false)}
-              className="w-full mt-8 bg-blue-600 text-white py-4 rounded-2xl font-bold text-xl shadow-lg hover:bg-blue-700 transition-all"
-            >
-              Anladım, Haydi Başlayalım!
-            </button>
+            <button onClick={() => setShowGuide(false)} className="w-full bg-blue-600 text-white py-4 rounded-2xl font-bold mt-8 shadow-xl hover:bg-blue-700 transition-all transform active:scale-95">Anladım, Başlayalım!</button>
           </div>
         </div>
       )}
 
-      {/* Persistent Badge/Progress Info */}
-      <footer className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 p-4 shadow-lg flex justify-between items-center z-50">
-        <div className="flex items-center space-x-2">
-          <i className="fa-solid fa-star text-yellow-400 text-xl"></i>
-          <span className="font-bold text-gray-700">Skorun: {progress.words.reduce((acc, w) => acc + w.level, 0)}</span>
+      <footer className="fixed bottom-0 left-0 right-0 bg-white/90 backdrop-blur-md border-t p-4 shadow-[0_-4px_20px_rgba(0,0,0,0.05)] flex justify-between items-center z-50">
+        <div className="flex items-center space-x-4">
+          <div className="bg-yellow-100 p-3 rounded-2xl shadow-inner border border-yellow-200">
+             <i className="fa-solid fa-trophy text-yellow-600 text-2xl"></i>
+          </div>
+          <div>
+            <div className="text-[10px] text-gray-400 font-bold uppercase tracking-widest leading-none mb-1">Toplam Skor</div>
+            <div className="font-bold text-gray-800 text-2xl leading-none">
+              {progress.words.reduce((acc, w) => acc + (w.level || 0), 0) * 10}
+            </div>
+          </div>
         </div>
-        <div className="flex space-x-2">
-          {progress.badges.map((b, i) => (
-            <span key={i} className="bg-blue-100 text-blue-800 text-xs font-semibold px-2.5 py-0.5 rounded-full">
-              {b}
-            </span>
-          ))}
+        <div className="flex flex-col items-end">
+          <div className="text-[10px] text-gray-400 font-bold uppercase tracking-widest mb-1">Kelime Sayısı</div>
+          <div className="bg-blue-50 text-blue-600 px-4 py-1.5 rounded-xl border border-blue-100 font-bold text-sm shadow-sm">
+            {progress.words.length} Kelime
+          </div>
         </div>
       </footer>
     </div>

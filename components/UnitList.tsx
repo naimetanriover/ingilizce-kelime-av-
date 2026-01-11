@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { Theme, Word, ViewState } from '../types';
+import { Theme, Word, ViewState } from '../types.ts';
 
 interface UnitListProps {
   theme: Theme;
@@ -40,33 +40,17 @@ const UnitList: React.FC<UnitListProps> = ({ theme, words, onSelectUnit }) => {
                 </div>
 
                 <div className="grid grid-cols-2 sm:flex gap-2">
-                  <button 
-                    onClick={() => onSelectUnit(unitName, 'STUDY')}
-                    className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-xl text-sm font-bold flex items-center justify-center space-x-2 transition-colors"
-                  >
-                    <i className="fa-solid fa-book-open"></i>
-                    <span>Çalış</span>
+                  <button onClick={() => onSelectUnit(unitName, 'STUDY')} className="bg-blue-500 text-white px-4 py-2 rounded-xl text-sm font-bold flex items-center space-x-2">
+                    <i className="fa-solid fa-book-open"></i><span>Çalış</span>
                   </button>
-                  <button 
-                    onClick={() => onSelectUnit(unitName, 'QUIZ_TR_EN')}
-                    className="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-xl text-sm font-bold flex items-center justify-center space-x-2 transition-colors"
-                  >
-                    <i className="fa-solid fa-bullseye"></i>
-                    <span>Avcı (TR-EN)</span>
+                  <button onClick={() => onSelectUnit(unitName, 'QUIZ_TR_EN')} className="bg-green-500 text-white px-4 py-2 rounded-xl text-sm font-bold flex items-center space-x-2">
+                    <i className="fa-solid fa-bullseye"></i><span>TR-EN</span>
                   </button>
-                  <button 
-                    onClick={() => onSelectUnit(unitName, 'QUIZ_EN_TR')}
-                    className="bg-purple-500 hover:bg-purple-600 text-white px-4 py-2 rounded-xl text-sm font-bold flex items-center justify-center space-x-2 transition-colors"
-                  >
-                    <i className="fa-solid fa-magnifying-glass"></i>
-                    <span>Avcı (EN-TR)</span>
+                  <button onClick={() => onSelectUnit(unitName, 'QUIZ_EN_TR')} className="bg-purple-500 text-white px-4 py-2 rounded-xl text-sm font-bold flex items-center space-x-2">
+                    <i className="fa-solid fa-magnifying-glass"></i><span>EN-TR</span>
                   </button>
-                  <button 
-                    onClick={() => onSelectUnit(unitName, 'QUICK_REVIEW')}
-                    className="bg-orange-500 hover:bg-orange-600 text-white px-4 py-2 rounded-xl text-sm font-bold flex items-center justify-center space-x-2 transition-colors"
-                  >
-                    <i className="fa-solid fa-bolt"></i>
-                    <span>Hızlı Tur</span>
+                  <button onClick={() => onSelectUnit(unitName, 'QUICK_REVIEW')} className="bg-orange-500 text-white px-4 py-2 rounded-xl text-sm font-bold flex items-center space-x-2">
+                    <i className="fa-solid fa-bolt"></i><span>Hızlı</span>
                   </button>
                 </div>
               </div>
