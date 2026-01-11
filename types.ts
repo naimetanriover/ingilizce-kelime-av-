@@ -32,7 +32,7 @@ export interface UserProgress {
   badges: string[];
 }
 
-export type ViewState = 'MENU' | 'UNITS' | 'STUDY' | 'QUIZ_EN_TR' | 'QUIZ_TR_EN' | 'QUICK_REVIEW' | 'TEACHER';
+export type ViewState = 'MENU' | 'UNITS' | 'STUDY' | 'QUIZ_EN_TR' | 'QUIZ_TR_EN' | 'QUICK_REVIEW';
 
 export interface QuizQuestion {
   word: Word;

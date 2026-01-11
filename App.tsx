@@ -10,7 +10,6 @@ import ThemeCard from './components/ThemeCard';
 import UnitList from './components/UnitList';
 import FlashcardMode from './components/FlashcardMode';
 import QuizMode from './components/QuizMode';
-import TeacherPanel from './components/TeacherPanel';
 import Navbar from './components/Navbar';
 
 const App: React.FC = () => {
@@ -169,18 +168,6 @@ const App: React.FC = () => {
           />
         );
 
-      case 'TEACHER':
-        return (
-          <TeacherPanel 
-            progress={progress} 
-            onImport={(newWords) => {
-              const updated = { ...progress, words: [...progress.words, ...newWords] };
-              saveProgress(updated);
-              setProgress(updated);
-            }}
-          />
-        );
-
       default:
         return <div>Yapım aşamasında...</div>;
     }
@@ -190,7 +177,6 @@ const App: React.FC = () => {
     <div className="min-h-screen pb-20">
       <Navbar 
         onHome={() => setView('MENU')} 
-        onTeacher={() => setView('TEACHER')} 
         canGoBack={view !== 'MENU'}
         onBack={handleBack}
       />

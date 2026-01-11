@@ -3,12 +3,11 @@ import React from 'react';
 
 interface NavbarProps {
   onHome: () => void;
-  onTeacher: () => void;
   canGoBack: boolean;
   onBack: () => void;
 }
 
-const Navbar: React.FC<NavbarProps> = ({ onHome, onTeacher, canGoBack, onBack }) => {
+const Navbar: React.FC<NavbarProps> = ({ onHome, canGoBack, onBack }) => {
   const handleSelectKey = async () => {
     try {
       if (window.aistudio && window.aistudio.openSelectKey) {
@@ -48,14 +47,6 @@ const Navbar: React.FC<NavbarProps> = ({ onHome, onTeacher, canGoBack, onBack })
         >
           <i className="fa-solid fa-key"></i>
           <span className="hidden sm:inline">Anahtar Seç</span>
-        </button>
-        
-        <button 
-          onClick={onTeacher}
-          className="text-gray-600 hover:text-blue-500 font-medium flex items-center space-x-1"
-        >
-          <i className="fa-solid fa-user-tie"></i>
-          <span className="hidden sm:inline">Öğretmen Paneli</span>
         </button>
       </div>
     </nav>
