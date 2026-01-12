@@ -55,7 +55,7 @@
         }
     </style>
 
-    <!-- KESİN ÇÖZÜM: Importmap sadeleştirildi -->
+    <!-- MOBİL VERİ İÇİN KRİTİK DÜZELTME: Importmap sadeleştirildi -->
     <script type="importmap">
 {
   "imports": {
@@ -72,19 +72,18 @@
     <div id="loader">
         <div class="text-center">
             <div class="inline-block animate-spin rounded-full h-12 w-12 border-4 border-blue-500 border-t-transparent"></div>
-            <p class="mt-4 font-bold text-blue-600">Word Master Yükleniyor...</p>
+            <p class="mt-4 font-bold text-blue-600 text-lg">Word Master Hazırlanıyor...</p>
         </div>
     </div>
     
     <div id="root"></div>
 
     <script type="module">
-        // Mobil veri için hata yakalayıcı
+        // Mobil veri hatalarını yakalayıp kullanıcıya yol gösteren mekanizma
         window.onerror = function(msg, url, lineNo, columnNo, error) {
-            console.error('Hata:', msg);
-            // Eğer yükleme başarısız olursa kullanıcıya bilgi ver
-            if (msg.includes('Script error')) {
-                alert('Bağlantı sorunu oluştu. Lütfen sayfayı yenileyin.');
+            console.error('Bağlantı Hatası:', msg);
+            if (msg.includes('Script error') || msg.includes('load failed')) {
+                alert('İnternet bağlantınızda bir yavaşlama olabilir. Lütfen sayfayı yenileyiniz.');
             }
             return false;
         };
@@ -95,7 +94,7 @@
                 setTimeout(() => {
                     loader.style.opacity = '0';
                     setTimeout(() => loader.style.display = 'none', 500);
-                }, 500);
+                }, 400);
             }
         });
     </script>
