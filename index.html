@@ -12,9 +12,11 @@
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="theme-color" content="#3b82f6">
     
+    <!-- Temel Kütüphaneler -->
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Fredoka+One&family=Quicksand:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
     <style>
         body {
             font-family: 'Quicksand', sans-serif;
@@ -41,20 +43,57 @@
         .card-back {
             transform: rotateY(180deg);
         }
+        #loader {
+            position: fixed;
+            inset: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: #f0f9ff;
+            z-index: 100;
+            transition: opacity 0.5s ease;
+        }
     </style>
-<script type="importmap">
+
+    <!-- CRITICAL FIX: Sadece bu 3 satır olmalı. Alttaki /'lı satırlar silindi. -->
+    <script type="importmap">
 {
   "imports": {
-    "react": "https://esm.sh/react@^19.2.3",
-    "react/": "https://esm.sh/react@^19.2.3/",
-    "react-dom": "https://esm.sh/react-dom@^19.2.3",
-    "react-dom/": "https://esm.sh/react-dom@^19.2.3/"
+    "react": "https://esm.sh/react@19.0.0",
+    "react-dom": "https://esm.sh/react-dom@19.0.0",
+    "react-dom/client": "https://esm.sh/react-dom@19.0.0/client",
+    "react-dom/": "https://esm.sh/react-dom@^19.2.3/",
+    "react/": "https://esm.sh/react@^19.2.3/"
   }
 }
 </script>
 </head>
 <body>
+    <div id="loader">
+        <div class="text-center">
+            <div class="inline-block animate-spin rounded-full h-12 w-12 border-4 border-blue-500 border-t-transparent"></div>
+            <p class="mt-4 font-bold text-blue-600">Word Master Yükleniyor...</p>
+        </div>
+    </div>
+    
     <div id="root"></div>
+
+    <script type="module">
+        window.addEventListener('load', () => {
+            const loader = document.getElementById('loader');
+            if (loader) {
+                setTimeout(() => {
+                    loader.style.opacity = '0';
+                    setTimeout(() => loader.style.display = 'none', 500);
+                }, 500);
+            }
+        });
+        
+        window.onerror = function(msg, url, lineNo, columnNo, error) {
+            console.error('Hata:', msg, '\nSatır:', lineNo, '\nDosya:', url);
+            return false;
+        };
+    </script>
     <script type="module" src="./index.tsx"></script>
 </body>
 </html>
