@@ -15,7 +15,7 @@
     <!-- Temel Kütüphaneler -->
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Fredoka+One&family=Quicksand:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" crossorigin="anonymous">
     
     <style>
         body {
@@ -55,7 +55,7 @@
         }
     </style>
 
-    <!-- CRITICAL FIX: Sadece bu 3 satır kalmalı. Çakışma önlendi. -->
+    <!-- KESİN ÇÖZÜM: Importmap sadeleştirildi -->
     <script type="importmap">
 {
   "imports": {
@@ -79,6 +79,16 @@
     <div id="root"></div>
 
     <script type="module">
+        // Mobil veri için hata yakalayıcı
+        window.onerror = function(msg, url, lineNo, columnNo, error) {
+            console.error('Hata:', msg);
+            // Eğer yükleme başarısız olursa kullanıcıya bilgi ver
+            if (msg.includes('Script error')) {
+                alert('Bağlantı sorunu oluştu. Lütfen sayfayı yenileyin.');
+            }
+            return false;
+        };
+
         window.addEventListener('load', () => {
             const loader = document.getElementById('loader');
             if (loader) {
@@ -88,11 +98,6 @@
                 }, 500);
             }
         });
-        
-        window.onerror = function(msg, url, lineNo, columnNo, error) {
-            console.error('Hata:', msg, '\nSatır:', lineNo, '\nDosya:', url);
-            return false;
-        };
     </script>
     <script type="module" src="./index.tsx"></script>
 </body>
