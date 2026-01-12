@@ -36,8 +36,7 @@ export const parseCSV = (
   };
 
   const header = parseLine(lines[0].toLowerCase());
-  const dataLines = lines.slice(1);
-
+  
   // If the first line doesn't look like a header (contains no mapping keywords), treat all lines as data and use defaults
   const isHeader = header.some(h => 
     h.includes('en') || h.includes('tr') || h.includes('word') || h.includes('turkish') || h.includes('meaning')
@@ -50,20 +49,28 @@ export const parseCSV = (
   const trIdx = isHeader ? header.indexOf(mapping.turkish.toLowerCase()) : 1;
   const unitIdx = isHeader ? header.indexOf(mapping.unit.toLowerCase()) : -1;
 
+  // Regex to remove patterns like (v), (n), (adj), (v.), (n.) etc.
+  // This looks for a space followed by a parenthesis containing letters and possibly a dot
+  const cleanPattern = /\s*\([a-z.]+\)/gi;
+
   const newWords: Word[] = actualLines.map((line, idx) => {
     const cells = parseLine(line);
     let en = cells[engIdx === -1 ? 0 : engIdx] || "";
     let tr = cells[trIdx === -1 ? 1 : trIdx] || "";
     let unit = unitIdx !== -1 ? cells[unitIdx] : "Genel";
 
-    // Clean special patterns like "What is the Turkish for 'Word'?"
+    // 1. Clean special patterns like "What is the Turkish for 'Word'?" (specific to some of your data)
     const enMatch = en.match(/'(.*?)'/);
     if (enMatch) en = enMatch[1];
+
+    // 2. Remove (v), (n), (adj) etc. from both English and Turkish
+    en = en.replace(cleanPattern, "").trim();
+    tr = tr.replace(cleanPattern, "").trim();
 
     return {
       id: `${themeId}-${unit}-${idx}-${Date.now()}`,
       themeId,
-      unit: unit || "Genel",
+      unit: (unit || "Genel").replace(cleanPattern, "").trim(),
       english: en,
       turkish: tr,
       level: 0,
