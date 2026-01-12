@@ -11,12 +11,12 @@
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="theme-color" content="#3b82f6">
     
-    <!-- Mobil Veri Bağlantı İstikrarı İçin Önyükleme -->
-    <link rel="preconnect" href="https://esm.sh">
-    <link rel="modulepreload" href="https://esm.sh/react@19.0.0">
-    <link rel="modulepreload" href="https://esm.sh/react-dom@19.0.0">
+    <!-- Mobil Veri Bağlantı Filtrelerini Aşmak İçin Önyükleme -->
+    <link rel="preconnect" href="https://esm.sh" crossorigin>
+    <link rel="modulepreload" href="https://esm.sh/react@19.0.0" crossorigin>
+    <link rel="modulepreload" href="https://esm.sh/react-dom@19.0.0" crossorigin>
     
-    <!-- Temel Kütüphaneler -->
+    <!-- Tasarım Kütüphaneleri -->
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Fredoka+One&family=Quicksand:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" crossorigin="anonymous">
@@ -46,7 +46,6 @@
         }
     </style>
 
-    <!-- KESİN ÇÖZÜM: SADECE BU 3 SATIR KALACAK. DİĞERLERİ ÇAKIŞMAYA NEDEN OLUP MOBİL VERİYİ KESİYOR. -->
     <script type="importmap">
 {
   "imports": {
@@ -63,20 +62,13 @@
     <div id="loader">
         <div class="text-center">
             <div class="inline-block animate-spin rounded-full h-12 w-12 border-4 border-blue-500 border-t-transparent"></div>
-            <p class="mt-4 font-bold text-blue-600 text-lg">Yükleniyor...</p>
+            <p class="mt-4 font-bold text-blue-600 text-lg">Word Master Başlatılıyor...</p>
         </div>
     </div>
     
     <div id="root"></div>
 
     <script type="module">
-        // Bağlantı hatalarını ve mobil veri kopmalarını yöneten küçük script
-        window.addEventListener('error', (e) => {
-            if (e.message && (e.message.includes('Fetch') || e.message.includes('import'))) {
-                console.warn('Bağlantı sorunu, yeniden deneniyor...');
-            }
-        }, true);
-
         window.addEventListener('load', () => {
             const loader = document.getElementById('loader');
             if (loader) {
@@ -87,6 +79,6 @@
             }
         });
     </script>
-    <script type="module" src="./index.tsx" crossorigin></script>
+    <script type="module" src="./index.tsx" crossorigin="anonymous"></script>
 </body>
 </html>
