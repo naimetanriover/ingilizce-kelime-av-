@@ -110,7 +110,9 @@ const App: React.FC = () => {
               
               <div className="bg-gradient-to-r from-blue-600 to-indigo-500 text-white p-8 rounded-3xl shadow-xl text-center max-w-2xl w-full border-b-8 border-blue-700">
                 <h2 className="heading-font text-4xl mb-2 italic tracking-tight">Word Master 5 🚀</h2>
-                <p className="opacity-90 font-medium text-lg">6 Tema, Tüm Kitap Kelimeleri Gömülü!</p>
+                <p className="opacity-90 font-medium text-lg px-4">
+                  ÇYD 5. Sınıf Multi kitabında geçen tüm kelimeleri tema tema öğren!
+                </p>
               </div>
             </div>
 
@@ -202,7 +204,7 @@ const App: React.FC = () => {
             <div className="space-y-6">
                <div className="flex items-start space-x-4">
                  <div className="bg-blue-500 text-white w-8 h-8 rounded-full flex-shrink-0 flex items-center justify-center font-bold shadow-md">1</div>
-                 <p className="text-gray-700 leading-relaxed font-medium">Kitabındaki <b>6 Temadan</b> birini seç.</p>
+                 <p className="text-gray-700 leading-relaxed font-medium">Kitabındaki <b>Temalardan</b> birini seç.</p>
                </div>
                <div className="flex items-start space-x-4">
                  <div className="bg-green-500 text-white w-8 h-8 rounded-full flex-shrink-0 flex items-center justify-center font-bold shadow-md">2</div>

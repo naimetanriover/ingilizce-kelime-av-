@@ -99,7 +99,7 @@ const TeacherPanel: React.FC<TeacherPanelProps> = ({ progress, onImport }) => {
                <i className="fa-solid fa-check-double mr-2"></i>
                Gömülü Müfredat Aktif
              </h4>
-             <p className="text-sm">Uygulama şu an <b>Tema 1'den Tema 6'ya kadar</b> tüm kelimeleri içeriyor. Öğrencileriniz için ek bir dosya yüklemeniz gerekmez.</p>
+             <p className="text-sm">Uygulama şu an <b>16 Temanın tamamını</b> ve ÇYD Multi kitabı kelimelerini içeriyor. Öğrencileriniz için ek bir dosya yüklemeniz gerekmez.</p>
           </div>
 
           {step === 1 ? (

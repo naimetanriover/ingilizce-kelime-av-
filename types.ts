@@ -5,7 +5,17 @@ export enum ThemeId {
   PersonalLife = 'personal-life',
   FamilyLife = 'family-life',
   NeighbourhoodCity = 'neighbourhood-city',
-  LifeInTheWorld = 'life-in-the-world'
+  LifeInTheWorld = 'life-in-the-world',
+  LifeInNature = 'life-in-nature',
+  LifeInUniverse = 'life-in-universe',
+  ArtSchool = 'art-school',
+  TechDigital = 'tech-digital',
+  HealthBody = 'health-body',
+  HomeFamily = 'home-family',
+  TravelCuisine = 'travel-cuisine',
+  CitiesSports = 'cities-sports',
+  EnvironmentNature = 'environment-nature',
+  SpaceFuture = 'space-future'
 }
 
 export interface Word {
