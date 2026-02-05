@@ -1,17 +1,23 @@
 {
-  "name": "Word Master 5",
-  "short_name": "WM5",
-  "description": "5. Sınıf İngilizce Kelime Oyunu",
+  "name": "Word Master 5 - İngilizce Avı",
+  "short_name": "WordMaster5",
+  "description": "5. Sınıf İngilizce Kelime Öğrenme Uygulaması",
   "icons": [
     {
       "src": "https://cdn-icons-png.flaticon.com/512/3534/3534033.png",
       "sizes": "512x512",
-      "type": "image/png"
+      "type": "image/png",
+      "purpose": "any maskable"
     }
   ],
   "start_url": "/",
   "display": "standalone",
-  "background_color": "#f0f9ff",
+  "orientation": "portrait",
+  "background_color": "#f8fafc",
   "theme_color": "#3b82f6",
+  "categories": [
+    "education",
+    "games"
+  ],
   "requestFramePermissions": []
 }

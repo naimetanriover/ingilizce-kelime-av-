@@ -1,4 +1,3 @@
-
 export enum ThemeId {
   SchoolLife = 'school-life',
   ClassroomLife = 'classroom-life',
@@ -24,7 +23,7 @@ export interface Word {
   unit: string;
   english: string;
   turkish: string;
-  level: number; // 0 to 5 (SRS level)
+  level: number;
   lastReview?: number;
   nextReview?: number;
 }

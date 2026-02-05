@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useMemo } from 'react';
 import { ViewState, ThemeId, Word, UserProgress } from './types.ts';
 import { THEMES, DEFAULT_CSV_DATA } from './constants.tsx';
@@ -21,28 +20,21 @@ const App: React.FC = () => {
   const [showGuide, setShowGuide] = useState(false);
 
   useEffect(() => {
-    // 1. Mevcut ilerlemeyi yükle
     const saved = loadProgress();
-    
-    // 2. Gömülü müfredat kelimelerini oluştur
     let embeddedWords: Word[] = [];
     THEMES.forEach(theme => {
       const csv = DEFAULT_CSV_DATA[theme.id];
       if (csv) {
-        // Gömülü verilerde mapping sabit: english, turkish, unit
         const parsed = parseCSV(csv, theme.id as ThemeId, { english: 'english', turkish: 'turkish', unit: 'unit' });
         embeddedWords = [...embeddedWords, ...parsed];
       }
     });
 
-    // 3. Senkronizasyon: Eğer cihazda hiç kelime yoksa veya müfredat güncellendiyse (kelime sayısı farkı)
-    // Öğrencinin ilerlemesini bozmadan yeni kelimeleri ekle
     if (saved.words.length === 0) {
       const initial = { ...saved, words: embeddedWords };
       saveProgress(initial);
       setProgress(initial);
     } else {
-      // Mevcut kelimeleri koru, eğer gömülü tarafta olup saved tarafta olmayan varsa ekle (Müfredat güncelleme desteği)
       const savedKeys = new Set(saved.words.map(w => `${w.english.toLowerCase()}-${w.themeId}`));
       const missingWords = embeddedWords.filter(ew => !savedKeys.has(`${ew.english.toLowerCase()}-${ew.themeId}`));
       
@@ -79,6 +71,10 @@ const App: React.FC = () => {
     else setView('MENU');
   };
 
+  const totalScore = useMemo(() => 
+    progress.words.reduce((acc, w) => acc + (w.level || 0), 0) * 10
+  , [progress.words]);
+
   const renderContent = () => {
     if (view === 'TEACHER') {
       return (
@@ -96,27 +92,25 @@ const App: React.FC = () => {
     switch (view) {
       case 'MENU':
         return (
-          <div className="max-w-6xl mx-auto px-4">
-            <div className="flex flex-col items-center mb-10">
-              <div className="flex flex-wrap gap-4 justify-center mb-6">
-                <button 
-                  onClick={() => setShowGuide(true)}
-                  className="bg-white text-blue-600 border-2 border-blue-100 px-6 py-3 rounded-2xl font-bold shadow-sm hover:shadow-md transition-all flex items-center space-x-2"
-                >
-                  <i className="fa-solid fa-circle-question"></i>
-                  <span>Nasıl Oynanır?</span>
-                </button>
-              </div>
-              
-              <div className="bg-gradient-to-r from-blue-600 to-indigo-500 text-white p-8 rounded-3xl shadow-xl text-center max-w-2xl w-full border-b-8 border-blue-700">
-                <h2 className="heading-font text-4xl mb-2 italic tracking-tight">Word Master 5 🚀</h2>
-                <p className="opacity-90 font-medium text-lg px-4">
-                  ÇYD 5. Sınıf Multi kitabında geçen tüm kelimeleri tema tema öğren!
+          <div className="max-w-6xl mx-auto px-4 pb-10">
+            <div className="flex flex-col items-center mb-8">
+              <div className="bg-gradient-to-r from-blue-600 to-indigo-500 text-white p-6 sm:p-10 rounded-[2rem] shadow-xl text-center w-full border-b-8 border-blue-700 mb-8">
+                <h2 className="heading-font text-3xl sm:text-5xl mb-3 italic">Word Master 5 🚀</h2>
+                <p className="opacity-90 font-medium text-sm sm:text-lg px-2 leading-relaxed">
+                  ÇYD 5. Sınıf Multi kitabındaki tüm kelimeleri eğlenerek keşfet!
                 </p>
               </div>
+
+              <button 
+                onClick={() => setShowGuide(true)}
+                className="bg-white text-blue-600 border-2 border-blue-100 px-6 py-4 rounded-2xl font-bold shadow-sm hover:shadow-md transition-all flex items-center space-x-2 active:scale-95"
+              >
+                <i className="fa-solid fa-circle-question"></i>
+                <span>Nasıl Oynanır?</span>
+              </button>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
               {THEMES.map(theme => {
                 const themeProgress = progress.words.filter(w => w.themeId === theme.id);
                 return (
@@ -134,13 +128,13 @@ const App: React.FC = () => {
               })}
             </div>
             
-            <div className="mt-12 text-center pb-10">
+            <div className="mt-12 text-center">
               <button 
                 onClick={() => setView('TEACHER')}
-                className="text-gray-400 hover:text-gray-600 text-sm font-bold flex items-center justify-center space-x-2 mx-auto px-4 py-2 rounded-xl hover:bg-gray-100 transition-all"
+                className="text-slate-400 hover:text-slate-600 text-xs font-bold flex items-center justify-center space-x-2 mx-auto px-6 py-3 rounded-2xl hover:bg-slate-100 transition-all border border-transparent hover:border-slate-200"
               >
                 <i className="fa-solid fa-user-tie"></i>
-                <span>Müfredat Yönetimi (Öğretmen)</span>
+                <span>Müfredat Yönetimi</span>
               </button>
             </div>
           </div>
@@ -183,59 +177,58 @@ const App: React.FC = () => {
         );
 
       default:
-        return <div className="text-center p-10 font-bold">Yükleniyor...</div>;
+        return <div className="text-center p-10 font-bold text-slate-400">Yükleniyor...</div>;
     }
   };
 
   return (
-    <div className="min-h-screen pb-24 bg-[#f8fafc]">
+    <div className="min-h-screen pb-32 bg-slate-50">
       <Navbar onHome={() => setView('MENU')} canGoBack={view !== 'MENU'} onBack={handleBack} />
-      <main className="container mx-auto mt-6">
+      <main className="container mx-auto mt-4 px-2">
         {renderContent()}
       </main>
 
       {showGuide && (
-        <div className="fixed inset-0 bg-black/70 z-[60] flex items-center justify-center p-4 backdrop-blur-md transition-all">
-          <div className="bg-white rounded-[2rem] max-w-md w-full p-8 relative shadow-2xl border-4 border-blue-100">
-            <button onClick={() => setShowGuide(false)} className="absolute -top-4 -right-4 bg-red-500 text-white w-10 h-10 rounded-full flex items-center justify-center shadow-lg hover:bg-red-600 transition-colors">
+        <div className="fixed inset-0 bg-slate-900/80 z-[60] flex items-center justify-center p-4 backdrop-blur-sm transition-all">
+          <div className="bg-white rounded-[2.5rem] max-w-md w-full p-8 relative shadow-2xl border-4 border-blue-100">
+            <button onClick={() => setShowGuide(false)} className="absolute -top-3 -right-3 bg-red-500 text-white w-10 h-10 rounded-full flex items-center justify-center shadow-lg active:scale-90 transition-transform">
               <i className="fa-solid fa-xmark"></i>
             </button>
-            <h2 className="heading-font text-3xl text-blue-600 mb-6 italic text-center underline decoration-wavy underline-offset-8">Nasıl Çalışır?</h2>
+            <h2 className="heading-font text-3xl text-blue-600 mb-6 text-center">Nasıl Oynanır?</h2>
             <div className="space-y-6">
                <div className="flex items-start space-x-4">
                  <div className="bg-blue-500 text-white w-8 h-8 rounded-full flex-shrink-0 flex items-center justify-center font-bold shadow-md">1</div>
-                 <p className="text-gray-700 leading-relaxed font-medium">Kitabındaki <b>Temalardan</b> birini seç.</p>
+                 <p className="text-slate-700 leading-tight font-medium">Kitabındaki bir <b>Temayı</b> ve içindeki kelime listesini seç.</p>
                </div>
                <div className="flex items-start space-x-4">
                  <div className="bg-green-500 text-white w-8 h-8 rounded-full flex-shrink-0 flex items-center justify-center font-bold shadow-md">2</div>
-                 <p className="text-gray-700 leading-relaxed font-medium"><b>"Çalış"</b> modunda kelimeleri sesli dinleyip ezberle.</p>
+                 <p className="text-slate-700 leading-tight font-medium"><b>"Çalış"</b> modunda kelimelerin sesini duy ve anlamını kartı çevirerek gör.</p>
                </div>
                <div className="flex items-start space-x-4">
                  <div className="bg-orange-500 text-white w-8 h-8 rounded-full flex-shrink-0 flex items-center justify-center font-bold shadow-md">3</div>
-                 <p className="text-gray-700 leading-relaxed font-medium"><b>"Test"</b> modlarında puanları topla ve kelimeleri "Usta" yap!</p>
+                 <p className="text-slate-700 leading-tight font-medium"><b>"Test"</b> modlarında puanları topla, kelime seviyeni yükselt!</p>
                </div>
             </div>
-            <button onClick={() => setShowGuide(false)} className="w-full bg-blue-600 text-white py-4 rounded-2xl font-bold mt-8 shadow-xl hover:bg-blue-700 transition-all transform active:scale-95">Anladım, Başlayalım!</button>
+            <button onClick={() => setShowGuide(false)} className="w-full bg-blue-600 text-white py-5 rounded-[1.5rem] font-bold mt-8 shadow-xl active:scale-95 transition-all text-lg">Anladım, Başlayalım!</button>
           </div>
         </div>
       )}
 
-      <footer className="fixed bottom-0 left-0 right-0 bg-white/90 backdrop-blur-md border-t p-4 shadow-[0_-4px_20px_rgba(0,0,0,0.05)] flex justify-between items-center z-50">
-        <div className="flex items-center space-x-4">
-          <div className="bg-yellow-100 p-3 rounded-2xl shadow-inner border border-yellow-200">
-             <i className="fa-solid fa-trophy text-yellow-600 text-2xl"></i>
+      {/* Footer / Status Bar */}
+      <footer className="fixed bottom-0 left-0 right-0 bg-white/90 backdrop-blur-lg border-t border-slate-100 p-4 safe-pb shadow-[0_-10px_40px_rgba(0,0,0,0.05)] flex justify-between items-center z-50">
+        <div className="flex items-center space-x-3">
+          <div className="bg-yellow-100 p-2.5 rounded-2xl border border-yellow-200 shadow-sm">
+             <i className="fa-solid fa-trophy text-yellow-600 text-xl"></i>
           </div>
           <div>
-            <div className="text-[10px] text-gray-400 font-bold uppercase tracking-widest leading-none mb-1">Toplam Skor</div>
-            <div className="font-bold text-gray-800 text-2xl leading-none">
-              {progress.words.reduce((acc, w) => acc + (w.level || 0), 0) * 10}
-            </div>
+            <div className="text-[9px] text-slate-400 font-bold uppercase tracking-widest leading-none mb-1">Skor</div>
+            <div className="font-bold text-slate-800 text-xl leading-none">{totalScore}</div>
           </div>
         </div>
         <div className="flex flex-col items-end">
-          <div className="text-[10px] text-gray-400 font-bold uppercase tracking-widest mb-1">Kelime Sayısı</div>
-          <div className="bg-blue-50 text-blue-600 px-4 py-1.5 rounded-xl border border-blue-100 font-bold text-sm shadow-sm">
-            {progress.words.length} Kelime Aktif
+          <div className="text-[9px] text-slate-400 font-bold uppercase tracking-widest mb-1">Kayıtlı Kelime</div>
+          <div className="bg-blue-50 text-blue-600 px-3 py-1.5 rounded-xl border border-blue-100 font-bold text-xs">
+            {progress.words.length} Aktif
           </div>
         </div>
       </footer>
